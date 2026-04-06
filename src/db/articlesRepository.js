@@ -1,5 +1,6 @@
-const { connect } = require('./connection');
-const { ObjectId } = require('mongodb');
+require("dotenv").config({ path: "../../.env" });
+const { connect } = require("./connection");
+const { ObjectId } = require("mongodb");
 
 /**
  * Tarea 2: Repositorio de artículos con driver nativo de MongoDB.
@@ -7,7 +8,7 @@ const { ObjectId } = require('mongodb');
 
 async function getCollection() {
   const db = await connect();
-  return db.collection('articles');
+  return db.collection("articles");
 }
 
 /**
@@ -15,8 +16,16 @@ async function getCollection() {
  * @returns {Promise<Array>}
  */
 async function findAll() {
-  // TODO
+  const collection = await getCollection();
+  const publishedArticles = await collection
+    .find({ published: true })
+    .toArray();
+
+  console.log(publishedArticles);
+  return publishedArticles;
 }
+
+findAll();
 
 /**
  * Busca por _id. Devuelve null si el id es inválido o no existe.
@@ -24,8 +33,19 @@ async function findAll() {
  * @returns {Promise<Object|null>}
  */
 async function findById(id) {
-  // TODO: recuerda convertir id a ObjectId con new ObjectId(id)
-  // y capturar el error si el id no tiene formato válido
+  try {
+    const collection = await getCollection();
+
+    const article = await collection.findOne({
+      _id: new ObjectId(id),
+      published: true,
+    });
+
+    return article || null;
+  } catch (error) {
+    console.log("id inválido (no es ObjectId)");
+    return null;
+  }
 }
 
 /**
@@ -34,7 +54,19 @@ async function findById(id) {
  * @returns {Promise<Object>}
  */
 async function create(data) {
-  // TODO
+  const collection = await getCollection();
+
+  const newArticle = {
+    ...data,
+    created_at: new Date(),
+  };
+
+  const result = await collection.insertOne(newArticle);
+
+  return {
+    _id: result.insertedId,
+    ...newArticle,
+  };
 }
 
 /**
@@ -44,7 +76,19 @@ async function create(data) {
  * @returns {Promise<Object|null>}
  */
 async function update(id, data) {
-  // TODO: usa findOneAndUpdate con { returnDocument: 'after' }
+  try {
+    const collection = await getCollection();
+
+    const result = await collection.findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: data },
+      { returnDocument: "after" },
+    );
+
+    return result || null;
+  } catch (error) {
+    return null;
+  }
 }
 
 /**
@@ -53,7 +97,17 @@ async function update(id, data) {
  * @returns {Promise<boolean>}
  */
 async function remove(id) {
-  // TODO
+  try {
+    const collection = await getCollection();
+
+    const result = await collection.deleteOne({
+      _id: new ObjectId(id),
+    });
+
+    return result.deletedCount === 1;
+  } catch (error) {
+    return false;
+  }
 }
 
 module.exports = { findAll, findById, create, update, remove };
