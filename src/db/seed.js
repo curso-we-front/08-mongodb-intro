@@ -1,6 +1,6 @@
-require('dotenv').config();
-const { connect, disconnect } = require('./connection');
-const articles = require('../../data/articles.json');
+require("dotenv").config();
+const { connect, disconnect } = require("./connection");
+const articles = require("../../data/articles.json");
 
 /**
  * Tarea 3: Script de seed.
@@ -11,16 +11,23 @@ const articles = require('../../data/articles.json');
 
 async function seed() {
   const db = await connect();
-  const collection = db.collection('articles');
+  const collection = db.collection("articles");
 
   // TODO: recorre los artículos e inserta solo los que no existan (comprueba por title)
   // Pista: usa collection.findOne({ title: article.title }) antes de insertOne
 
-  console.log('Seed completado');
+  for (const article of articles) {
+    const publishedArticle = await collection.findOne({ title: article.title });
+    if (!publishedArticle) {
+      await collection.insertOne(article);
+    }
+  }
+
+  console.log("Seed completado");
   await disconnect();
 }
 
-seed().catch(err => {
+seed().catch((err) => {
   console.error(err);
   process.exit(1);
 });

@@ -1,5 +1,5 @@
-require('dotenv').config();
-const { MongoClient } = require('mongodb');
+require("dotenv").config();
+const { MongoClient } = require("mongodb");
 
 /**
  * Tarea 1: Conexión singleton a MongoDB.
@@ -15,6 +15,18 @@ let db = null;
 async function connect() {
   // TODO: implementar
   // Pista: guarda client y db en las variables de módulo
+  if (db) {
+    return db;
+  }
+  try {
+    client = new MongoClient(process.env.MONGODB_URI);
+    await client.connect();
+    db = client.db();
+    return db;
+  } catch (error) {
+    console.error("Error al conectar MongoDB:", error);
+    throw error;
+  }
 }
 
 async function disconnect() {

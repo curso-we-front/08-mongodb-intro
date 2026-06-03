@@ -1,5 +1,5 @@
-const { connect } = require('./connection');
-const { ObjectId } = require('mongodb');
+const { connect } = require("./connection");
+const { ObjectId } = require("mongodb");
 
 /**
  * Tarea 2: Repositorio de artículos con driver nativo de MongoDB.
@@ -7,7 +7,7 @@ const { ObjectId } = require('mongodb');
 
 async function getCollection() {
   const db = await connect();
-  return db.collection('articles');
+  return db.collection("articles");
 }
 
 /**
@@ -16,6 +16,11 @@ async function getCollection() {
  */
 async function findAll() {
   // TODO
+  const collection = await getCollection();
+
+  const publishedArticles = collection.find({ published: true }).toArray();
+
+  return publishedArticles;
 }
 
 /**
@@ -26,6 +31,13 @@ async function findAll() {
 async function findById(id) {
   // TODO: recuerda convertir id a ObjectId con new ObjectId(id)
   // y capturar el error si el id no tiene formato válido
+  try {
+    const collection = await getCollection();
+    const article = await collection.findOne({ _id: new ObjectId(id) });
+    return article;
+  } catch (error) {
+    return null;
+  }
 }
 
 /**
@@ -33,8 +45,21 @@ async function findById(id) {
  * @param {Object} data
  * @returns {Promise<Object>}
  */
+
 async function create(data) {
   // TODO
+  try {
+    const collection = await getCollection();
+    const result = await collection.insertOne(data);
+
+    return {
+      _id: result.insertedId.toString(),
+      ...data,
+    };
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 }
 
 /**
@@ -45,6 +70,13 @@ async function create(data) {
  */
 async function update(id, data) {
   // TODO: usa findOneAndUpdate con { returnDocument: 'after' }
+  const collection = await getCollection();
+  const updatedArticle = collection.findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    { $set: data },
+    { returnDocument: "after" },
+  );
+  return updatedArticle;
 }
 
 /**
@@ -54,6 +86,12 @@ async function update(id, data) {
  */
 async function remove(id) {
   // TODO
+  const collection = await getCollection();
+  const result = await collection.deleteOne({ _id: new ObjectId(id) });
+  if (!result.deletedCount) {
+    return false;
+  }
+  return true;
 }
 
 module.exports = { findAll, findById, create, update, remove };
