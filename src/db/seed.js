@@ -19,6 +19,11 @@ async function seed() {
   for (const article of articles) {
     const publishedArticle = await collection.findOne({ title: article.title });
     if (!publishedArticle) {
+      const newArticle = {
+        id,
+        _id: article.id,
+        ...article,
+      };
       await collection.insertOne(article);
     }
   }
